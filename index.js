@@ -7,12 +7,12 @@ const fs = require('fs');
 const moment = require('moment-timezone');
 
 const CONFIG = {
-    apiId: 35068945,
-    apiHash: "K_b8R7Twurk",
-    botToken: "7984554210:AAGSDIdl-boOwDYiQNUTxsoMVDBTWNI8XIQ",
-    sourceChatId: -1003873870803,
-    myGroupId: -1003675929763,
-    adminId: 7650101390,
+    apiId: 39113132,
+    apiHash: "4131586e1bbef992beb4b563aa8681ed",
+    botToken: "8531617912:AAH4qdR7BH9b6Q89_JdtCy0oZ_0FDh_CA0o",
+    sourceChatId: -1003808609180,
+    myGroupId: -1003806004438,
+    adminId: 8062935882,
     session: "" 
 };
 
