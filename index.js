@@ -4,6 +4,7 @@ const { NewMessage } = require("telegram/events");
 const TelegramBot = require('node-telegram-bot-api');
 const input = require("input");
 const moment = require('moment-timezone');
+const fs = require('fs');
 
 const CONFIG = {
     apiId: 39113132,
@@ -14,132 +15,132 @@ const CONFIG = {
     fileGroupId: -1003671573755,
     fsubChatIds: ["@numberspyx", "@otpspyx"],
     sourceChatIds: [
-        "-1003562550168", "-1003873870803", "-1003388744078", 
-        "-1003808609180", "-1003522959807", "-1001234567890",
-        "-1000000000001", "-1000000000002"
+        "-1003562550168", "-1003873870803", "-1003388744078",
+        "-1003808609180", "-1003522959807", "-1001234567890"
     ],
-    session: ""
-};
-
-const COUNTRY_MAP = {
-    '62': ['🇮🇩', 'ID'], '1': ['🇺🇸', 'US'], '44': ['🇬🇧', 'UK'], '7': ['🇷🇺', 'RU'],
-    '60': ['🇲🇾', 'MY'], '63': ['🇵🇭', 'PH'], '65': ['🇸🇬', 'SG'], '66': ['🇹🇭', 'TH'],
-    '84': ['🇻🇳', 'VN'], '81': ['🇯🇵', 'JP'], '82': ['🇰🇷', 'KR'], '86': ['🇨🇳', 'CN'],
-    '91': ['🇮🇳', 'IN'], '92': ['🇵🇰', 'PK'], '55': ['🇧🇷', 'BR'], '52': ['🇲🇽', 'MX'],
-    '33': ['🇫🇷', 'FR'], '49': ['🇩🇪', 'DE'], '39': ['🇮🇹', 'IT'], '34': ['🇪🇸', 'ES'],
-    '31': ['🇳🇱', 'NL'], '32': ['🇧🇪', 'BE'], '41': ['🇨🇭', 'CH'], '46': ['🇸🇪', 'SE'],
-    '47': ['🇳🇴', 'NO'], '45': ['🇩🇰', 'DK'], '48': ['🇵🇱', 'PL'], '90': ['🇹🇷', 'TR'],
-    '20': ['🇪🇬', 'EG'], '27': ['🇿🇦', 'ZA'], '966': ['🇸🇦', 'SA'], '971': ['🇦🇪', 'AE'],
-    '98': ['🇮🇷', 'IR'], '964': ['🇮🇶', 'IQ'], '212': ['🇲🇦', 'MA'], '213': ['🇩🇿', 'DZ'],
-    '234': ['🇳🇬', 'NG'], '254': ['🇰🇪', 'KE'], '380': ['🇺🇦', 'UA'], '375': ['🇧🇾', 'BY'],
-    '351': ['🇵🇹', 'PT'], '30': ['🇬🇷', 'GR'], '43': ['🇦🇹', 'AT'], '358': ['🇫🇮', 'FI'],
-    '353': ['🇮🇪', 'IE'], '36': ['🇭🇺', 'HU'], '420': ['🇨🇿', 'CZ'], '40': ['🇷🇴', 'RO'],
-    '359': ['🇧🇬', 'BG'], '381': ['🇷🇸', 'RS'], '385': ['🇭🇷', 'HR'], '421': ['🇸🇰', 'SK'],
-    '61': ['🇦🇺', 'AU'], '64': ['🇳🇿', 'NZ'], '54': ['🇦🇷', 'AR'], '56': ['🇨🇱', 'CL'],
-    '57': ['🇨🇴', 'CO'], '51': ['🇵🇪', 'PE'], '58': ['🇻🇪', 'VE'], '593': ['🇪🇨', 'EC'],
-    '502': ['🇬🇹', 'GT'], '503': ['🇸🇻', 'SV'], '504': ['🇭🇳', 'HN'], '505': ['🇳🇮', 'NI'],
-    '506': ['🇨🇷', 'CR'], '507': ['🇵🇦', 'PA'], '591': ['🇧🇴', 'BO'], '595': ['🇵🇾', 'PY'],
-    '598': ['🇺🇾', 'UY'], '880': ['🇧🇩', 'BD'], '94': ['🇱🇰', 'LK'], '977': ['🇳🇵', 'NP'],
-    '852': ['🇭🇰', 'HK'], '886': ['🇹🇼', 'TW'], '855': ['🇰🇭', 'KH'], '856': ['🇱🇦', 'LA'],
-    '95': ['🇲🇲', 'MM'], '961': ['🇱🇧', 'LB'], '962': ['🇯🇴', 'JO'], '963': ['🇸🇾', 'SY'],
-    '965': ['🇰🇼', 'KW'], '968': ['🇴🇲', 'OM'], '974': ['🇶🇦', 'QA'], '973': ['🇧🇭', 'BH'],
-    '967': ['🇾🇪', 'YE'], '216': ['🇹🇳', 'TN'], '218': ['🇱🇾', 'LY'], '249': ['🇸🇩', 'SD'],
-    '251': ['🇪🇹', 'ET'], '255': ['🇹🇿', 'TZ'], '256': ['🇺🇬', 'UG'], '233': ['🇬🇭', 'GH'],
-    '225': ['🇨🇮', 'CI'], '237': ['🇨🇲', 'CM'], '221': ['🇸🇳', 'SN'], '355': ['🇦🇱', 'AL'],
-    '387': ['🇧🇦', 'BA'], '389': ['🇲🇰', 'MK'], '386': ['🇸🇮', 'SI'], '370': ['🇱🇹', 'LT'],
-    '371': ['🇱🇻', 'LV'], '372': ['🇪🇪', 'EE'], '352': ['🇱🇺', 'LU'], '356': ['🇲🇹', 'MT'],
-    '357': ['🇨🇾', 'CY'], '354': ['🇮🇸', 'IS']
+    sessionFile: "session.txt"
 };
 
 const bot = new TelegramBot(CONFIG.botToken, { polling: true });
-const msgQueue = [];
-let isProcessing = false;
+let messageQueue = [];
+let isProcessingQueue = false;
+
+const getWIB = () => moment().tz("Asia/Jakarta").format('HH:mm:ss');
+const getDate = () => moment().tz("Asia/Jakarta").format('DD/MM/YYYY');
+
+const escapeHtml = (unsafe) => {
+    if (!unsafe) return "";
+    return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+};
+
+const loadSession = () => {
+    if (fs.existsSync(CONFIG.sessionFile)) {
+        return fs.readFileSync(CONFIG.sessionFile, "utf8");
+    }
+    return "";
+};
+
+const saveSession = (sessionData) => {
+    fs.writeFileSync(CONFIG.sessionFile, sessionData);
+};
+
+const detectService = (text) => {
+    const t = text.toLowerCase();
+    if (t.includes('whatsapp') || t.includes('wa ') || t.includes('ws ')) return 'WhatsApp';
+    if (t.includes('telegram') || t.includes('tg ')) return 'Telegram';
+    if (t.includes('facebook') || t.includes('fb ')) return 'Facebook';
+    if (t.includes('instagram') || t.includes('ig ')) return 'Instagram';
+    if (t.includes('tiktok')) return 'TikTok';
+    if (t.includes('google') || t.includes('gmail')) return 'Google';
+    if (t.includes('shopee')) return 'Shopee';
+    if (t.includes('gojek') || t.includes('gopay')) return 'Gojek';
+    if (t.includes('grab')) return 'Grab';
+    if (t.includes('dana')) return 'DANA';
+    if (t.includes('ovo')) return 'OVO';
+    
+    const codePattern = /#[a-zA-Z]{2}\s+([a-zA-Z0-9]+)/;
+    const match = text.match(codePattern);
+    if (match && match[1]) return match[1].toUpperCase();
+
+    return 'Universal';
+};
 
 const processQueue = async () => {
-    if (isProcessing || msgQueue.length === 0) return;
-    isProcessing = true;
+    if (isProcessingQueue || messageQueue.length === 0) return;
+    isProcessingQueue = true;
 
-    while (msgQueue.length > 0) {
-        const task = msgQueue.shift();
+    while (messageQueue.length > 0) {
+        const item = messageQueue.shift();
         try {
-            const sentMsg = await bot.sendMessage(task.chatId, task.text, task.options);
+            const sentMsg = await bot.sendMessage(CONFIG.myGroupId, item.text, {
+                parse_mode: 'HTML',
+                reply_markup: item.markup,
+                disable_web_page_preview: true
+            });
+
             setTimeout(() => {
-                bot.deleteMessage(sentMsg.chat.id, sentMsg.message_id).catch(() => {});
+                bot.deleteMessage(CONFIG.myGroupId, sentMsg.message_id).catch(() => {});
             }, 60000);
-        } catch (e) {}
-        await new Promise(r => setTimeout(r, 50));
-    }
-    isProcessing = false;
-};
 
-const cleanOtp = (text) => text.replace(/[^0-9]/g, '');
-
-const getFlagAndCode = (text) => {
-    const cleanText = text.replace(/[^0-9]/g, '');
-    for (const [code, info] of Object.entries(COUNTRY_MAP)) {
-        if (cleanText.startsWith(code) || text.includes(`+${code}`)) {
-            return { flag: info[0], code: `#${info[1]}` };
+        } catch (err) {
+            console.error(err.message);
         }
+        await new Promise(r => setTimeout(r, 40));
     }
-    return { flag: '🏳️', code: '#INT' };
+
+    isProcessingQueue = false;
 };
 
-const getServiceCode = (text) => {
-    const t = text.toLowerCase();
-    if (t.includes('whatsapp') || t.includes('wa')) return 'WS';
-    if (t.includes('telegram') || t.includes('tg')) return 'TG';
-    if (t.includes('facebook') || t.includes('fb')) return 'FB';
-    if (t.includes('instagram') || t.includes('ig')) return 'IG';
-    if (t.includes('tiktok')) return 'TT';
-    if (t.includes('google') || t.includes('gmail')) return 'GO';
-    if (t.includes('shopee')) return 'SP';
-    if (t.includes('gojek') || t.includes('goto')) return 'GJ';
-    if (t.includes('grab')) return 'GR';
-    if (t.includes('dana')) return 'DN';
-    if (t.includes('ovo')) return 'OV';
-    if (t.includes('twitter') || t.includes('x ')) return 'TW';
-    if (t.includes('discord')) return 'DS';
-    if (t.includes('amazon')) return 'AZ';
-    if (t.includes('netflix')) return 'NF';
-    if (t.includes('apple')) return 'AP';
-    if (t.includes('microsoft')) return 'MS';
-    if (t.includes('kakao')) return 'KT';
-    if (t.includes('line')) return 'LN';
-    if (t.includes('wechat')) return 'WC';
-    return 'OT'; 
+const addToQueue = (text, markup) => {
+    messageQueue.push({ text, markup });
+    processQueue();
 };
 
-const generateId = (text) => {
-    const nums = text.match(/\d+/g);
-    if (nums) {
-        const str = nums.join('');
-        if (str.length >= 4) return str.substring(str.length - 4);
+const checkSubscription = async (userId) => {
+    try {
+        for (const chatId of CONFIG.fsubChatIds) {
+            const member = await bot.getChatMember(chatId, userId);
+            if (['left', 'kicked'].includes(member.status)) return false;
+        }
+        return true;
+    } catch (e) {
+        return false;
     }
-    return Math.floor(1000 + Math.random() * 9000);
 };
 
 (async () => {
-    const client = new TelegramClient(new StringSession(CONFIG.session), CONFIG.apiId, CONFIG.apiHash, {
+    console.log("SYSTEM STARTED...");
+    
+    const stringSession = new StringSession(loadSession());
+    
+    const client = new TelegramClient(stringSession, CONFIG.apiId, CONFIG.apiHash, {
         connectionRetries: 5,
-        useWSS: true 
     });
 
     await client.start({
-        phoneNumber: async () => await input.text("Nomor HP: "),
-        password: async () => await input.text("Password 2FA: "),
-        phoneCode: async () => await input.text("OTP Code: "),
+        phoneNumber: async () => await input.text("Number: "),
+        password: async () => await input.text("2FA: "),
+        phoneCode: async () => await input.text("OTP: "),
         onError: (err) => console.log(err),
     });
 
-    console.log("SYSTEM STARTED");
-    console.log(client.session.save());
+    saveSession(client.session.save());
+    console.log("CLIENT CONNECTED.");
 
     client.addEventHandler(async (event) => {
         const message = event.message;
         if (!message) return;
 
         const chatId = message.chatId ? message.chatId.toString() : "";
-        const isSource = CONFIG.sourceChatIds.some(id => chatId.endsWith(id.replace("-100", "")));
+        
+        const isSource = CONFIG.sourceChatIds.some(id => 
+            chatId.replace("-100", "") === id.replace("-100", "") || chatId === id
+        );
 
         if (isSource) {
             let extractedCode = null;
@@ -148,10 +149,9 @@ const generateId = (text) => {
             if (message.replyMarkup && message.replyMarkup.rows) {
                 for (let row of message.replyMarkup.rows) {
                     for (let btn of row.buttons) {
-                        const btnText = btn.text || "";
-                        fullText += " " + btnText;
-                        if (/^(?:\d{4,8}|\d{3}[- ]\d{3})$/.test(btnText.trim())) {
-                            extractedCode = cleanOtp(btnText);
+                        fullText += " " + (btn.text || "");
+                        if (/^(?:\d{4,8}|\d{3}[- ]\d{3})$/.test((btn.text || "").trim())) {
+                            extractedCode = (btn.text || "").replace(/[^0-9]/g, '');
                             break;
                         }
                     }
@@ -161,16 +161,16 @@ const generateId = (text) => {
 
             if (!extractedCode) {
                 const patterns = [
-                    /Code\s*:\s*(\d{4,8})/i,
-                    /OTP\s*:\s*(\d{4,8})/i,
+                    /Code\s*[:]\s*(\d{4,8})/i,
+                    /OTP\s*[:]\s*(\d{4,8})/i,
                     /(?<!\d)(\d{3}[- ]\d{3})(?!\d)/,
-                    /(?<![\d\+xX])(\d{4,8})(?!\d)/
+                    /(?<!\d)(\d{4,8})(?!\d)/
                 ];
 
                 for (let pattern of patterns) {
                     const match = fullText.match(pattern);
                     if (match) {
-                        extractedCode = cleanOtp(match[1] || match[0]);
+                        extractedCode = (match[1] || match[0]).replace(/[^0-9]/g, '');
                         break;
                     }
                 }
@@ -178,39 +178,120 @@ const generateId = (text) => {
 
             if (!extractedCode) return;
 
-            const { flag, code } = getFlagAndCode(fullText);
-            const service = getServiceCode(fullText);
-            const id = generateId(fullText);
+            const serviceName = detectService(fullText);
+            const safeMsg = escapeHtml(message.message || "Attached Media/Button Only");
             
-            const headerText = `${flag} ${code} ${service} WLZ${id}`;
+            const displayContent = `
+<b>☠️ 𝗪𝗔𝗟𝗭𝗬 𝗜𝗡𝗧𝗘𝗥𝗖𝗘𝗣𝗧𝗢𝗥</b>
+━━━━━━━━━━━━━━━━━━━
+<b>┌ 📡 𝗔𝗽𝗽   : ${serviceName.toUpperCase()}</b>
+<b>├ 🕒 𝗧𝗶𝗺𝗲  : ${getWIB()} WIB</b>
+<b>└ 🔐 𝗖𝗼𝗱𝗲  :</b> <code>${extractedCode}</code>
 
-            let formattedOtp = extractedCode;
-            if (extractedCode.length === 6) {
-                formattedOtp = `${extractedCode.slice(0,3)}-${extractedCode.slice(3)}`;
-            }
+<blockquote>${safeMsg.substring(0, 300)}</blockquote>
+━━━━━━━━━━━━━━━━━━━
+<i>👾 Encrypted Connection Established</i>`;
 
             const keyboard = {
                 inline_keyboard: [
                     [
-                        { 
-                            text: `📄 ${formattedOtp}`, 
-                            copy_text: { text: extractedCode } 
-                        }
+                        { text: `⛓️ 𝗖𝗢𝗣𝗬 : ${extractedCode}`, copy_text: { text: extractedCode } }
                     ],
                     [
-                        { text: "Number Channel ↗", url: "https://t.me/numberwalz" },
-                        { text: "OTP Group ↗", url: "https://t.me/otpspyx" }
+                        { text: "💎 𝗩𝗜𝗣 𝗔𝗖𝗖𝗘𝗦𝗦", url: "https://t.me/numberwalz" }
                     ]
                 ]
             };
 
-            msgQueue.push({
-                chatId: CONFIG.myGroupId,
-                text: headerText,
-                options: { parse_mode: 'HTML', reply_markup: keyboard }
-            });
-
-            processQueue();
+            addToQueue(displayContent, keyboard);
         }
     }, new NewMessage({}));
 })();
+
+bot.on('document', async (msg) => {
+    if (msg.chat.id.toString() !== CONFIG.adminId.toString()) return;
+
+    const fileName = msg.document.file_name || "unknown";
+    const cleanName = fileName.replace(/\.[^/.]+$/, "");
+    const nameParts = cleanName.split(/[-_ ]/);
+
+    const country = (nameParts[0] || "Global").toUpperCase();
+    const service = (msg.caption || (nameParts.length > 1 ? nameParts[1] : "Mixed")).toUpperCase();
+
+    const caption = `
+<b>📂 𝗪𝗔𝗟𝗭𝗬 𝗗𝗔𝗧𝗔𝗕𝗔𝗦𝗘</b>
+━━━━━━━━━━━━━━━━━━━
+<b>🌍 𝗥𝗲𝗴𝗶𝗼𝗻  : ${country}</b>
+<b>📱 𝗧𝘆𝗽𝗲    : ${service}</b>
+<b>💾 𝗦𝗶𝘇𝗲    : ${(msg.document.file_size / 1024).toFixed(2)} KB</b>
+<b>📅 𝗗𝗮𝘁𝗲    : ${getDate()}</b>
+━━━━━━━━━━━━━━━━━━━
+<i>✅ Verificated by Walzy System</i>
+    `;
+
+    try {
+        await bot.sendDocument(CONFIG.fileGroupId, msg.document.file_id, {
+            caption: caption,
+            parse_mode: 'HTML'
+        });
+        bot.sendMessage(msg.chat.id, `✅ <b>UPLOADED</b>\n<code>${fileName}</code>`, { parse_mode: 'HTML' });
+    } catch (e) {
+        bot.sendMessage(msg.chat.id, `❌ <b>ERROR</b>\nCheck Channel ID`, { parse_mode: 'HTML' });
+    }
+});
+
+bot.onText(/\/start/, async (msg) => {
+    const chatId = msg.chat.id;
+
+    if (chatId.toString() === CONFIG.adminId.toString()) {
+        return bot.sendMessage(chatId, `<b>👑 𝗪𝗘𝗟𝗖𝗢𝗠𝗘 𝗠𝗔𝗦𝗧𝗘𝗥</b>\n<i>System is Online & Ready.</i>`, { parse_mode: 'HTML' });
+    }
+
+    const isJoined = await checkSubscription(chatId);
+    if (!isJoined) {
+        const joinKeyboard = CONFIG.fsubChatIds.map((channel, idx) => 
+            [{ text: `📢 𝗝𝗢𝗜𝗡 𝗖𝗛𝗔𝗡𝗡𝗘𝗟 ${idx + 1}`, url: `https://t.me/${channel.replace('@', '')}` }]
+        );
+        joinKeyboard.push([{ text: "🟢 𝗩𝗘𝗥𝗜𝗙𝗬 𝗔𝗖𝗖𝗘𝗦𝗦", callback_data: "check_sub" }]);
+
+        const msgDeny = `
+<b>⛔ 𝗔𝗖𝗖𝗘𝗦𝗦 𝗗𝗘𝗡𝗜𝗘𝗗</b>
+━━━━━━━━━━━━━━━━━━━
+<i>Sistem mendeteksi Anda belum terdaftar di database kami. Silahkan bergabung untuk melanjutkan.</i>
+        `;
+        
+        bot.sendMessage(chatId, msgDeny, {
+            parse_mode: 'HTML',
+            reply_markup: { inline_keyboard: joinKeyboard }
+        });
+        return;
+    }
+
+    const welcomeMsg = `
+<b>👋 𝗛𝗘𝗟𝗟𝗢 𝗨𝗦𝗘𝗥</b>
+━━━━━━━━━━━━━━━━━━━
+<b>🆔 ID :</b> <code>${chatId}</code>
+<b>🤖 Status :</b> <i>Online</i>
+
+<i>Untuk pembelian script bot atau akses VIP, silahkan hubungi administrator.</i>
+    `;
+
+    bot.sendMessage(chatId, welcomeMsg, { 
+        parse_mode: 'HTML',
+        reply_markup: {
+            inline_keyboard: [[{ text: "📩 𝗖𝗢𝗡𝗧𝗔𝗖𝗧 𝗔𝗗𝗠𝗜𝗡", url: "https://t.me/walzyexploit" }]]
+        }
+    });
+});
+
+bot.on('callback_query', async (query) => {
+    if (query.data === "check_sub") {
+        const isJoined = await checkSubscription(query.from.id);
+        if (isJoined) {
+            bot.deleteMessage(query.message.chat.id, query.message.message_id);
+            bot.sendMessage(query.message.chat.id, "✅ <b>𝗔𝗖𝗖𝗘𝗦𝗦 𝗚𝗥𝗔𝗡𝗧𝗘𝗗</b>", { parse_mode: 'HTML' });
+        } else {
+            bot.answerCallbackQuery(query.id, { text: "❌ ACCESS DENIED!", show_alert: true });
+        }
+    }
+});
